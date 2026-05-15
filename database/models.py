@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 import enum
 
@@ -19,11 +18,7 @@ class Book(Base):
     author = Column(String, nullable=False, index=True)
     category = Column(String, nullable=False, index=True)
     isbn = Column(String, unique=True, nullable=False)
-    availability_status = Column(
-        String, default=AvailabilityStatus.available, nullable=False
-    )
-
-    transactions = relationship("Transaction", back_populates="book")
+    availability_status = Column(String, default="available", nullable=False)
 
 
 class Borrower(Base):
@@ -34,17 +29,14 @@ class Borrower(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     phone = Column(String, nullable=False)
 
-    transactions = relationship("Transaction", back_populates="borrower")
-
 
 class Transaction(Base):
     __tablename__ = "transactions"
 
     transaction_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    book_id = Column(Integer, ForeignKey("books.book_id"), nullable=False)
-    borrower_id = Column(Integer, ForeignKey("borrowers.borrower_id"), nullable=False)
+    book_id = Column(Integer, nullable=False)
+    borrower_id = Column(Integer, nullable=False)
+    book_title = Column(String, nullable=True)
+    borrower_name = Column(String, nullable=True)
     borrow_date = Column(DateTime, server_default=func.now(), nullable=False)
     return_date = Column(DateTime, nullable=True)
-
-    book = relationship("Book", back_populates="transactions")
-    borrower = relationship("Borrower", back_populates="transactions")

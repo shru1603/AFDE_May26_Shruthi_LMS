@@ -1,12 +1,11 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from datetime import datetime, timezone
 
 from database import models
 from backend import schemas
 
 
-# ── Book CRUD ─────────────────────────────────────────────────────────────────
+# ── Book ──────────────────────────────────────────────────────────────────────
 
 def get_books(db: Session):
     return db.query(models.Book).all()
@@ -50,7 +49,23 @@ def delete_book(db: Session, book_id: int):
     return db_book
 
 
-# ── Borrower CRUD ─────────────────────────────────────────────────────────────
+def search_books(db: Session, query: str):
+    keyword = f"%{query}%"
+    return (
+        db.query(models.Book)
+        .filter(
+            or_(
+                models.Book.title.ilike(keyword),
+                models.Book.author.ilike(keyword),
+                models.Book.category.ilike(keyword),
+                models.Book.isbn.ilike(keyword),
+            )
+        )
+        .all()
+    )
+
+
+# ── Borrower ──────────────────────────────────────────────────────────────────
 
 def get_borrowers(db: Session):
     return db.query(models.Borrower).all()
@@ -94,67 +109,40 @@ def delete_borrower(db: Session, borrower_id: int):
     return db_borrower
 
 
-# ── Transaction CRUD ──────────────────────────────────────────────────────────
+# ── Transaction ───────────────────────────────────────────────────────────────
 
 def get_transactions(db: Session):
     return db.query(models.Transaction).all()
 
 
-def borrow_book(db: Session, borrow: schemas.BorrowRequest):
-    book = get_book(db, borrow.book_id)
-    if not book or book.availability_status != "available":
-        return None, "Book is not available"
-
-    borrower = get_borrower(db, borrow.borrower_id)
-    if not borrower:
-        return None, "Borrower not found"
-
-    transaction = models.Transaction(
-        book_id=borrow.book_id,
-        borrower_id=borrow.borrower_id,
-        borrow_date=datetime.now(timezone.utc),
-    )
-    book.availability_status = "borrowed"
-    db.add(transaction)
-    db.commit()
-    db.refresh(transaction)
-    return transaction, None
+def get_transaction(db: Session, transaction_id: int):
+    return db.query(models.Transaction).filter(
+        models.Transaction.transaction_id == transaction_id
+    ).first()
 
 
-def return_book(db: Session, return_req: schemas.ReturnRequest):
-    transaction = (
+def get_active_transaction(db: Session, transaction_id: int):
+    return (
         db.query(models.Transaction)
         .filter(
-            models.Transaction.transaction_id == return_req.transaction_id,
+            models.Transaction.transaction_id == transaction_id,
             models.Transaction.return_date == None,
         )
         .first()
     )
-    if not transaction:
-        return None, "Active transaction not found"
-
-    transaction.return_date = datetime.now(timezone.utc)
-    book = get_book(db, transaction.book_id)
-    if book:
-        book.availability_status = "available"
-    db.commit()
-    db.refresh(transaction)
-    return transaction, None
 
 
-# ── Search ────────────────────────────────────────────────────────────────────
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-def search_books(db: Session, query: str):
-    keyword = f"%{query}%"
-    return (
-        db.query(models.Book)
-        .filter(
-            or_(
-                models.Book.title.ilike(keyword),
-                models.Book.author.ilike(keyword),
-                models.Book.category.ilike(keyword),
-                models.Book.isbn.ilike(keyword),
-            )
-        )
-        .all()
-    )
+def count_active_borrows_for_book(db: Session, book_id: int) -> int:
+    return db.query(models.Transaction).filter(
+        models.Transaction.book_id == book_id,
+        models.Transaction.return_date == None,
+    ).count()
+
+
+def count_active_borrows_for_borrower(db: Session, borrower_id: int) -> int:
+    return db.query(models.Transaction).filter(
+        models.Transaction.borrower_id == borrower_id,
+        models.Transaction.return_date == None,
+    ).count()

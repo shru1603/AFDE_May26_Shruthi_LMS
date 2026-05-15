@@ -70,9 +70,9 @@ class TransactionResponse(BaseModel):
     transaction_id: int
     book_id: int
     borrower_id: int
+    book_title: Optional[str] = None
+    borrower_name: Optional[str] = None
     borrow_date: datetime
     return_date: Optional[datetime] = None
-    book: Optional[BookResponse] = None
-    borrower: Optional[BorrowerResponse] = None
 
     model_config = {"from_attributes": True}
