@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from datetime import datetime, timezone
 
 from database import models
-import schemas
+from backend import schemas
 
 
 # ── Book CRUD ─────────────────────────────────────────────────────────────────
