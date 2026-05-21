@@ -76,3 +76,45 @@ class TransactionResponse(BaseModel):
     return_date: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
+
+
+# ── Analytics schemas ─────────────────────────────────────────────────────────
+
+class PopularBookResponse(BaseModel):
+    book_id: int
+    title: str
+    author: str
+    category: str
+    isbn: Optional[str] = None
+    borrow_count: int
+
+    model_config = {"from_attributes": True}
+
+
+class CategoryStatResponse(BaseModel):
+    category: str
+    borrow_count: int
+    book_count: int
+
+    model_config = {"from_attributes": True}
+
+
+class MonthlyTrendResponse(BaseModel):
+    year: int
+    month: int
+    borrow_count: int
+    return_count: int
+
+    model_config = {"from_attributes": True}
+
+
+class OverdueResponse(BaseModel):
+    transaction_id: int
+    book_id: int
+    borrower_id: int
+    book_title: Optional[str] = None
+    borrower_name: Optional[str] = None
+    borrow_date: datetime
+    days_overdue: int
+
+    model_config = {"from_attributes": True}
