@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .env
 frontend/node_modules/
+
+# Large raw dataset — download from Kaggle
+datasets/BooksDataset.csv

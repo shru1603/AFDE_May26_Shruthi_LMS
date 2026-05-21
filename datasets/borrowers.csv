@@ -1,0 +1,45 @@
+borrower_id,borrower_name,email,phone
+1,Aarav Iyer,aarav.iyer1@email.com,9104332181
+2,Aisha Mehta,aisha.mehta2@email.com,9600133890
+3,Arjun Joshi,arjun.joshi3@email.com,9386379402
+4,Bhavna Rao,bhavna.rao4@email.com,9654235116
+5,Chitra Verma,chitra.verma5@email.com,9559407816
+6,Deepak Verma,deepak.verma6@email.com,9849593103
+7,Divya Singh,divya.singh7@email.com,9131647525
+8,Farhan Kumar,farhan.kumar8@email.com,9341928327
+9,Geeta Nair,geeta.nair9@email.com,9483503056
+10,Harish Singh,harish.singh10@email.com,9139537672
+11,Ishaan Singh,ishaan.singh11@email.com,9238849696
+12,Jaya Kumar,jaya.kumar12@email.com,9328710122
+13,Karan Iyer,karan.iyer13@email.com,9691669784
+14,Lakshmi Joshi,lakshmi.joshi14@email.com,9018451462
+15,Manoj Reddy,manoj.reddy15@email.com,9048281489
+16,Meera Gupta,meera.gupta16@email.com,9252880957
+17,Naveen Sharma,naveen.sharma17@email.com,9154303911
+18,Neha Rao,neha.rao18@email.com,9718227824
+19,Pooja Joshi,pooja.joshi19@email.com,9963834657
+20,Prakash Joshi,prakash.joshi20@email.com,9713315098
+21,Priya Gupta,priya.gupta21@email.com,9930103105
+22,Rahul Verma,rahul.verma22@email.com,9834738299
+23,Rajesh Reddy,rajesh.reddy23@email.com,9376311656
+24,Ritu Nair,ritu.nair24@email.com,9701065133
+25,Rohan Gupta,rohan.gupta25@email.com,9872624731
+26,Sana Reddy,sana.reddy26@email.com,9810801326
+27,Sneha Reddy,sneha.reddy27@email.com,9736026064
+28,Suresh Reddy,suresh.reddy28@email.com,9468723430
+29,Vikram Mehta,vikram.mehta29@email.com,9805009788
+30,Zara Patel,zara.patel30@email.com,9081219136
+31,,unknown31@email.com,9876543201
+32,  Ravi Shankar  ,,9123456789
+33,Anita Desai,anita.desai@email.com,
+34,Kabir Malhotra,kabirmalhotra.email.com,9988776655
+35,Sunita Roy,sunita@,9876001234
+36,Tarun Bhat,tarun.bhat@email.com,98765432
+37,Meghna Pillai,meghna.pillai@email.com,98765432101
+38,Arun Nair,arun.nair@email.com,98-765-4321
+39,  Pooja   Tiwari  ,pooja.tiwari@email.com,9001234567
+40,,,9123456700
+1,Aarav Iyer,aarav.iyer1@email.com,9104332181
+5,Chitra Verma,chitra.verma5@email.com,9559407816
+10,Harish Singh,harish.singh10@email.com,9139537672
+31,,unknown31@email.com,9876543201
