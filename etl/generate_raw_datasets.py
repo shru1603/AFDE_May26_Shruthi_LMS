@@ -38,6 +38,15 @@ def messy_date(dt: datetime) -> str:
     return dt.strftime(fmt)
 
 
+def generate_isbn13(seed_val: int) -> str:
+    """Generate a valid ISBN-13 with check digit, using seed_val for uniqueness."""
+    random.seed(seed_val)
+    digits = [9, 7, 8] + [random.randint(0, 9) for _ in range(9)]
+    check = (10 - sum(d * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits)) % 10) % 10
+    random.seed(42)  # restore global seed
+    return "".join(str(d) for d in digits) + str(check)
+
+
 # ── Extract 150 Books from BooksDataset.csv ───────────────────────────────────
 
 def generate_books() -> pd.DataFrame:
@@ -80,6 +89,21 @@ def generate_books() -> pd.DataFrame:
     df.at[28, "Publish Date"] = "March 2019"
     df.at[42, "Publish Date"] = "2018"
     df.at[60, "Publish Date"] = None
+
+    # ── Assign book_id (1-based) before adding duplicates ────────────────────
+    # Transactions reference these IDs positionally (1–150).
+    df.insert(0, "book_id", range(1, len(df) + 1))
+
+    # ── Generate ISBN-13 for each book ────────────────────────────────────────
+    isbns = [generate_isbn13(1000 + i) for i in range(len(df))]
+    df.insert(1, "isbn", isbns)
+
+    # ── Dirty: bad ISBN values ────────────────────────────────────────────────
+    df.at[17, "isbn"] = "INVALID-ISBN"       # non-numeric
+    df.at[31, "isbn"] = "12345"              # too short
+    df.at[46, "isbn"] = None                 # missing
+    df.at[62, "isbn"] = "978-0-306-40615-7"  # dashes (non-standard format)
+    df.at[75, "isbn"] = df.at[0, "isbn"]     # duplicate ISBN
 
     # ── Dirty: duplicate rows ─────────────────────────────────────────────────
     duplicates = df.iloc[[0, 5, 10, 20]].copy()
