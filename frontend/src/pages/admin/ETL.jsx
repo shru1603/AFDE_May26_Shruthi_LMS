@@ -54,15 +54,15 @@ export default function ETL() {
 
   return (
     <div style={styles.page}>
-      <h2 style={styles.heading}>ETL — Upload CSV Data</h2>
+      <h2 style={styles.heading}>Import CSV Data</h2>
       <p style={styles.subtext}>
-        Upload historical CSV files to run the ETL pipeline. The analytics tables will be
-        refreshed with the uploaded data combined with live website activity.
+        Upload CSV files to import historical data. Only the uploaded files will be processed
+        and merged with existing records.
       </p>
 
       <div style={styles.card}>
-        <h3 style={styles.cardTitle}>Select CSV Files</h3>
-        <p style={styles.hint}>Upload one or more files. Existing files in datasets/ are used if not replaced.</p>
+        <h3 style={styles.cardTitle}>Select Files to Import</h3>
+        <p style={styles.hint}>Upload one or more files. Only the uploaded files will be processed.</p>
 
         <div style={styles.uploadList}>
           <FileRow label="Books CSV" hint="book_id, isbn, Title, Authors, Category …" onChange={handleFile('books')} file={files.books} />
@@ -75,7 +75,7 @@ export default function ETL() {
             Clear
           </button>
           <button style={styles.btnPrimary} onClick={handleSubmit} disabled={status === 'loading'}>
-            {status === 'loading' ? 'Running ETL…' : 'Upload & Run ETL'}
+            {status === 'loading' ? 'Running ETL…' : 'Upload & Import'}
           </button>
         </div>
       </div>
@@ -84,19 +84,56 @@ export default function ETL() {
         <div style={{ ...styles.resultCard, borderLeft: '4px solid #10b981' }}>
           <p style={{ ...styles.resultTitle, color: '#10b981' }}>ETL completed successfully</p>
           <p style={styles.resultLine}>Files uploaded: <strong>{result.uploaded.join(', ')}</strong></p>
+
           <div style={styles.summaryGrid}>
             <SummaryItem label="Books" value={result.summary.books} />
             <SummaryItem label="Borrowers" value={result.summary.borrowers} />
             <SummaryItem label="Transactions" value={result.summary.transactions} />
             <SummaryItem label="Overdue" value={result.summary.overdue} />
           </div>
-          <p style={styles.hint}>Go to Dashboard to see the updated analytics charts.</p>
+
+          {result.transform_stats && Object.keys(result.transform_stats).length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <p style={styles.statsTitle}>Transform — Row Breakdown</p>
+              <table style={styles.statsTable}>
+                <thead>
+                  <tr>
+                    <th style={styles.sTh}>File</th>
+                    <th style={styles.sTh}>Input</th>
+                    <th style={styles.sTh}>Loaded</th>
+                    <th style={styles.sTh}>Dropped</th>
+                    <th style={styles.sTh}>Reasons</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(result.transform_stats).map(([file, s]) => {
+                    const reasons = Object.entries(s.dropped)
+                      .filter(([, v]) => v > 0)
+                      .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+                      .join(' · ');
+                    const dropped = s.input_rows - s.output_rows;
+                    return (
+                      <tr key={file}>
+                        <td style={styles.sTd}><strong>{file}</strong></td>
+                        <td style={styles.sTd}>{s.input_rows}</td>
+                        <td style={{ ...styles.sTd, color: '#10b981', fontWeight: 600 }}>{s.output_rows}</td>
+                        <td style={{ ...styles.sTd, color: dropped > 0 ? '#ef4444' : '#94a3b8' }}>{dropped}</td>
+                        <td style={{ ...styles.sTd, color: '#64748b', fontSize: 12 }}>{reasons || '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <p style={{ ...styles.hint, marginTop: 16 }}>Go to Dashboard to see the updated analytics charts.</p>
         </div>
       )}
 
       {status === 'error' && result && (
         <div style={{ ...styles.resultCard, borderLeft: '4px solid #ef4444' }}>
-          <p style={{ ...styles.resultTitle, color: '#ef4444' }}>ETL failed</p>
+          <p style={{ ...styles.resultTitle, color: '#ef4444' }}>Import failed</p>
           <p style={styles.resultLine}>{result.message}</p>
         </div>
       )}
@@ -149,6 +186,10 @@ const styles = {
   resultTitle:    { fontSize: 16, fontWeight: 700, marginBottom: 10, marginTop: 0 },
   resultLine:     { fontSize: 14, color: '#475569', marginBottom: 16 },
   summaryGrid:    { display: 'flex', gap: 16, marginBottom: 16 },
+  statsTitle:     { fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 10 },
+  statsTable:     { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
+  sTh:            { background: '#f1f5f9', padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0' },
+  sTd:            { padding: '8px 12px', borderBottom: '1px solid #f1f5f9', color: '#334155' },
   summaryItem:    { flex: 1, background: '#f8fafc', borderRadius: 8, padding: '12px', textAlign: 'center' },
   summaryValue:   { fontSize: 24, fontWeight: 700, color: '#0d3b25' },
   summaryLabel:   { fontSize: 12, color: '#94a3b8', marginTop: 4 },

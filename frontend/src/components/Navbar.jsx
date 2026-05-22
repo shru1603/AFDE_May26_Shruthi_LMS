@@ -6,7 +6,7 @@ const adminLinks = [
   { to: '/admin/books', label: 'Books' },
   { to: '/admin/borrowers', label: 'Borrowers' },
   { to: '/admin/transactions', label: 'Transactions' },
-  { to: '/admin/etl', label: 'ETL' },
+  { to: '/admin/etl', label: 'Import' },
 ];
 
 const userLinks = [

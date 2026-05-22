@@ -38,7 +38,8 @@ async def upload_and_run(
 
         models.Base.metadata.create_all(bind=engine)
 
-        extracted = extract.run()
+        uploaded_keys = {f.replace(".csv", "") for f in uploaded}
+        extracted = extract.run(uploaded_keys)
         transformed = transform.run(extracted)
         load.run(transformed)
 
@@ -53,6 +54,7 @@ async def upload_and_run(
         return {
             "status": "success",
             "uploaded": uploaded,
+            "transform_stats": transformed.get("transform_stats", {}),
             "summary": {
                 "books":        summary["total_books"],
                 "borrowers":    summary["total_borrowers"],

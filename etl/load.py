@@ -167,9 +167,22 @@ def run(transformed: dict):
 
     db = SessionLocal()
     try:
-        book_id_map     = load_books(db, transformed["books_clean"])
-        borrower_id_map = load_borrowers(db, transformed["borrowers_clean"])
-        load_transactions(db, transformed["transactions_clean"], book_id_map, borrower_id_map)
+        book_id_map = (
+            load_books(db, transformed["books_clean"])
+            if transformed.get("books_clean") is not None
+            else {r.book_id: r.book_id for r in db.query(models.Book.book_id).all()}
+        )
+
+        borrower_id_map = (
+            load_borrowers(db, transformed["borrowers_clean"])
+            if transformed.get("borrowers_clean") is not None
+            else {r.borrower_id: r.borrower_id for r in db.query(models.Borrower.borrower_id).all()}
+        )
+
+        if transformed.get("transactions_clean") is not None:
+            load_transactions(db, transformed["transactions_clean"], book_id_map, borrower_id_map)
+        else:
+            print("[Load] Transactions : skipped (not uploaded)")
     finally:
         db.close()
 
