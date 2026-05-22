@@ -19,10 +19,16 @@
 | POST | `/borrowers/` | Add a new borrower |
 | PUT | `/borrowers/{borrower_id}` | Update a borrower |
 | DELETE | `/borrowers/{borrower_id}` | Delete a borrower |
-| GET | `/transactions` | List all transactions |
+| GET | `/transactions` | List all transactions (sorted by borrow date desc) |
 | POST | `/borrow` | Borrow a book |
 | POST | `/return` | Return a book |
 | GET | `/search?q={query}` | Search books by keyword |
+| GET | `/analytics/summary` | Dashboard summary counts |
+| GET | `/analytics/popular-books` | Top borrowed books |
+| GET | `/analytics/category-stats` | Borrow and book counts per category |
+| GET | `/analytics/monthly-trends` | Monthly borrow and return counts |
+| GET | `/analytics/overdue` | List of overdue transactions |
+| POST | `/etl/upload` | Upload CSVs and run the import pipeline |
 
 ---
 
@@ -77,9 +83,7 @@ Returns a single book by ID.
 
 **Response `404 Not Found`**
 ```json
-{
-  "detail": "Book not found"
-}
+{ "detail": "Book not found" }
 ```
 
 ---
@@ -148,9 +152,7 @@ Updates one or more fields of an existing book. Only fields included in the requ
 
 **Response `404 Not Found`**
 ```json
-{
-  "detail": "Book not found"
-}
+{ "detail": "Book not found" }
 ```
 
 ---
@@ -177,16 +179,12 @@ Deletes a book permanently. Deletion is blocked if the book is currently borrowe
 
 **Response `400 Bad Request`** — book is currently borrowed
 ```json
-{
-  "detail": "Cannot delete: book is currently borrowed. Return it first."
-}
+{ "detail": "Cannot delete: book is currently borrowed. Return it first." }
 ```
 
 **Response `404 Not Found`**
 ```json
-{
-  "detail": "Book not found"
-}
+{ "detail": "Book not found" }
 ```
 
 ---
@@ -204,12 +202,6 @@ Returns all registered borrowers.
     "borrower_name": "Alice Johnson",
     "email": "alice@example.com",
     "phone": "9876543210"
-  },
-  {
-    "borrower_id": 2,
-    "borrower_name": "Bob Smith",
-    "email": "bob@example.com",
-    "phone": "9123456780"
   }
 ]
 ```
@@ -256,9 +248,7 @@ Updates one or more fields of an existing borrower.
 
 **Request Body** (all fields optional)
 ```json
-{
-  "phone": "9000000001"
-}
+{ "phone": "9000000001" }
 ```
 
 **Response `200 OK`**
@@ -273,9 +263,7 @@ Updates one or more fields of an existing borrower.
 
 **Response `404 Not Found`**
 ```json
-{
-  "detail": "Borrower not found"
-}
+{ "detail": "Borrower not found" }
 ```
 
 ---
@@ -300,16 +288,12 @@ Deletes a borrower permanently. Deletion is blocked if the borrower has any unre
 
 **Response `400 Bad Request`** — borrower has active borrows
 ```json
-{
-  "detail": "Cannot delete: borrower has books not yet returned."
-}
+{ "detail": "Cannot delete: borrower has books not yet returned." }
 ```
 
 **Response `404 Not Found`**
 ```json
-{
-  "detail": "Borrower not found"
-}
+{ "detail": "Borrower not found" }
 ```
 
 ---
@@ -317,39 +301,38 @@ Deletes a borrower permanently. Deletion is blocked if the borrower has any unre
 ## Transactions
 
 ### GET `/transactions`
-Returns all transactions (both active and returned).
+Returns all transactions sorted by `borrow_date` descending (most recent first), with a secondary sort by `transaction_id` descending.
 
 **Response `200 OK`**
 ```json
 [
   {
-    "transaction_id": 1,
+    "transaction_id": 5,
     "book_id": 2,
     "borrower_id": 1,
     "book_title": "The Pragmatic Programmer",
     "borrower_name": "Alice Johnson",
-    "borrow_date": "2025-05-01T09:30:00",
-    "return_date": "2025-05-10T14:00:00"
+    "borrow_date": "2026-05-20T09:30:00",
+    "return_date": null
   },
   {
-    "transaction_id": 2,
+    "transaction_id": 3,
     "book_id": 3,
     "borrower_id": 2,
     "book_title": "Clean Code",
     "borrower_name": "Bob Smith",
-    "borrow_date": "2025-05-12T11:00:00",
-    "return_date": null
+    "borrow_date": "2026-04-12T11:00:00",
+    "return_date": "2026-04-20T14:00:00"
   }
 ]
 ```
 
-> `return_date` is `null` for books that have not yet been returned.  
-> Transaction status (Borrowed / Returned) is derived on the frontend from whether `return_date` is set.
+> `return_date` is `null` for books that have not yet been returned.
 
 ---
 
 ### POST `/borrow`
-Records a new borrow transaction. Sets the book's status to `borrowed`. Stores the book title and borrower name as snapshots on the transaction.
+Records a new borrow transaction. Sets the book's status to `borrowed`. Stores book title and borrower name as snapshots.
 
 **Request Body**
 ```json
@@ -367,28 +350,24 @@ Records a new borrow transaction. Sets the book's status to `borrowed`. Stores t
 **Response `201 Created`**
 ```json
 {
-  "transaction_id": 3,
+  "transaction_id": 6,
   "book_id": 1,
   "borrower_id": 2,
   "book_title": "Clean Code",
   "borrower_name": "Bob Smith",
-  "borrow_date": "2025-05-15T10:00:00",
+  "borrow_date": "2026-05-22T10:00:00",
   "return_date": null
 }
 ```
 
 **Response `400 Bad Request`** — book is not available
 ```json
-{
-  "detail": "Book is not available"
-}
+{ "detail": "Book is not available" }
 ```
 
-**Response `404 Not Found`** — borrower not found
+**Response `404 Not Found`**
 ```json
-{
-  "detail": "Borrower not found"
-}
+{ "detail": "Borrower not found" }
 ```
 
 ---
@@ -398,9 +377,7 @@ Records the return of a borrowed book. Sets `return_date` on the transaction and
 
 **Request Body**
 ```json
-{
-  "transaction_id": 3
-}
+{ "transaction_id": 6 }
 ```
 
 | Field | Type | Required | Description |
@@ -410,21 +387,19 @@ Records the return of a borrowed book. Sets `return_date` on the transaction and
 **Response `200 OK`**
 ```json
 {
-  "transaction_id": 3,
+  "transaction_id": 6,
   "book_id": 1,
   "borrower_id": 2,
   "book_title": "Clean Code",
   "borrower_name": "Bob Smith",
-  "borrow_date": "2025-05-15T10:00:00",
-  "return_date": "2025-05-20T16:30:00"
+  "borrow_date": "2026-05-22T10:00:00",
+  "return_date": "2026-05-22T16:30:00"
 }
 ```
 
 **Response `404 Not Found`** — no active transaction with that ID
 ```json
-{
-  "detail": "Active transaction not found"
-}
+{ "detail": "Active transaction not found" }
 ```
 
 ---
@@ -437,12 +412,9 @@ Searches books by keyword across title, author, category, and ISBN. Case-insensi
 **Query Parameter**
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `q` | string | Yes | Search keyword (minimum 1 character) |
+| `q` | string | Yes | Search keyword |
 
-**Example Request**
-```
-GET /search?q=clean
-```
+**Example:** `GET /search?q=clean`
 
 **Response `200 OK`**
 ```json
@@ -458,9 +430,210 @@ GET /search?q=clean
 ]
 ```
 
-**Response `200 OK`** — no matches (returns empty array)
+---
+
+## Analytics
+
+All analytics are computed live from the operational `books`, `borrowers`, and `transactions` tables.
+
+---
+
+### GET `/analytics/summary`
+Returns headline counts for the dashboard.
+
+**Response `200 OK`**
 ```json
-[]
+{
+  "total_books": 152,
+  "total_borrowers": 31,
+  "total_transactions": 201,
+  "available": 120,
+  "borrowed": 32,
+  "overdue_count": 14
+}
+```
+
+| Field | Description |
+|---|---|
+| `total_books` | Total books in the library |
+| `total_borrowers` | Total registered borrowers |
+| `total_transactions` | Total borrow transactions (all time) |
+| `available` | Books with `availability_status = available` |
+| `borrowed` | Books with `availability_status = borrowed` |
+| `overdue_count` | Active borrows with `borrow_date` older than 14 days |
+
+---
+
+### GET `/analytics/popular-books?limit=10`
+Returns the most borrowed books ranked by borrow count.
+
+**Query Parameter**
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `limit` | integer | 10 | Number of books to return |
+
+**Response `200 OK`**
+```json
+[
+  {
+    "book_id": 5,
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "category": "Fiction",
+    "isbn": "9780743273565",
+    "borrow_count": 8
+  }
+]
+```
+
+---
+
+### GET `/analytics/category-stats`
+Returns borrow count and book count grouped by category.
+
+**Response `200 OK`**
+```json
+[
+  {
+    "category": "Fiction",
+    "borrow_count": 45,
+    "book_count": 30
+  },
+  {
+    "category": "Science",
+    "borrow_count": 28,
+    "book_count": 18
+  }
+]
+```
+
+---
+
+### GET `/analytics/monthly-trends`
+Returns monthly borrow and return counts for the trend line chart.
+
+**Response `200 OK`**
+```json
+[
+  {
+    "month": "2025-12",
+    "borrows": 18,
+    "returns": 14
+  },
+  {
+    "month": "2026-01",
+    "borrows": 22,
+    "returns": 19
+  }
+]
+```
+
+---
+
+### GET `/analytics/overdue`
+Returns all active transactions where `borrow_date` is older than 14 days.
+
+**Response `200 OK`**
+```json
+[
+  {
+    "transaction_id": 39,
+    "book_id": 12,
+    "borrower_id": 4,
+    "book_title": "What Went Wrong at Enron",
+    "borrower_name": "Deepak Verma",
+    "borrow_date": "2026-04-10T00:00:00",
+    "return_date": null,
+    "days_overdue": 42
+  }
+]
+```
+
+---
+
+## Import (ETL)
+
+### POST `/etl/upload`
+Accepts up to three CSV files, runs the ETL pipeline (Extract → Transform → Load), and returns a summary with per-file row breakdown. Only the uploaded files are processed — any file not included is skipped.
+
+**Request** — `multipart/form-data`
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `books_csv` | file | No | Books CSV (`book_id`, `isbn`, `Title`, `Authors`, `Category`, …) |
+| `borrowers_csv` | file | No | Borrowers CSV (`borrower_id`, `borrower_name`, `email`, `phone`) |
+| `transactions_csv` | file | No | Transactions CSV (`transaction_id`, `book_id`, `borrower_id`, `borrow_date`, `return_date`) |
+
+At least one file must be provided.
+
+**Response `200 OK`** — success
+```json
+{
+  "status": "success",
+  "uploaded": ["books.csv", "transactions.csv"],
+  "transform_stats": {
+    "books": {
+      "input_rows": 154,
+      "output_rows": 148,
+      "dropped": {
+        "null_title": 2,
+        "duplicates": 4
+      }
+    },
+    "transactions": {
+      "input_rows": 215,
+      "output_rows": 193,
+      "dropped": {
+        "missing_ids": 5,
+        "invalid_fk": 3,
+        "unparseable_date": 2,
+        "future_date": 1,
+        "return_before_borrow": 1,
+        "duplicates": 10
+      }
+    }
+  },
+  "summary": {
+    "books": 150,
+    "borrowers": 30,
+    "transactions": 193,
+    "overdue": 14
+  }
+}
+```
+
+**Transform drop reasons by file:**
+
+*Books*
+| Reason | Description |
+|---|---|
+| `null_title` | Rows with missing or empty title |
+| `duplicates` | Exact duplicate rows |
+
+*Borrowers*
+| Reason | Description |
+|---|---|
+| `missing_name_or_email` | Rows with missing borrower name or email |
+| `invalid_email` | Email does not match `name@domain.ext` format |
+| `invalid_phone` | Phone is not exactly 10 digits after stripping non-digits |
+| `duplicate_email` | Duplicate rows by email |
+
+*Transactions*
+| Reason | Description |
+|---|---|
+| `missing_ids` | Rows with null `book_id` or `borrower_id` |
+| `invalid_fk` | `book_id` or `borrower_id` not found in books/borrowers |
+| `unparseable_date` | `borrow_date` cannot be parsed in any supported format |
+| `future_date` | `borrow_date` is in the future |
+| `return_before_borrow` | `return_date` is earlier than `borrow_date` |
+| `duplicates` | Duplicate rows by (`book_id`, `borrower_id`, `borrow_date`) |
+
+**Response `200 OK`** — error (e.g. no files uploaded)
+```json
+{
+  "status": "error",
+  "message": "No CSV files uploaded."
+}
 ```
 
 ---
