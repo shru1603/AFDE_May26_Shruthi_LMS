@@ -7,6 +7,7 @@ import Borrowers from './pages/admin/Borrowers';
 import Transactions from './pages/admin/Transactions';
 import SearchBooks from './pages/user/SearchBooks';
 import BorrowReturn from './pages/user/BorrowReturn';
+import ETL from './pages/admin/ETL';
 
 
 function WithNav({ children }) {
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/admin/books" element={<WithNav><Books /></WithNav>} />
         <Route path="/admin/borrowers" element={<WithNav><Borrowers /></WithNav>} />
         <Route path="/admin/transactions" element={<WithNav><Transactions /></WithNav>} />
+        <Route path="/admin/etl" element={<WithNav><ETL /></WithNav>} />
 
         <Route path="/user/search" element={<WithNav><SearchBooks /></WithNav>} />
         <Route path="/user/borrow-return" element={<WithNav><BorrowReturn /></WithNav>} />

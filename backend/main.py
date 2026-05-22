@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database.database import engine
 from database import models
-from backend.routers import books, borrowers, transactions, analytics
+from backend.routers import books, borrowers, transactions, analytics, etl
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -21,6 +21,7 @@ app.include_router(books.router)
 app.include_router(borrowers.router)
 app.include_router(transactions.router)
 app.include_router(analytics.router)
+app.include_router(etl.router)
 
 
 @app.get("/")

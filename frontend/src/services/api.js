@@ -20,3 +20,10 @@ export const returnBook = (data) => api.post('/return', data);
 
 // Search
 export const searchBooks = (query) => api.get(`/search?q=${query}`);
+
+// Analytics
+export const getAnalyticsSummary = () => api.get('/analytics/summary');
+export const getPopularBooks = (limit = 10) => api.get(`/analytics/popular-books?limit=${limit}`);
+export const getCategoryStats = () => api.get('/analytics/category-stats');
+export const getMonthlyTrends = () => api.get('/analytics/monthly-trends');
+export const getOverdueAnalytics = () => api.get('/analytics/overdue');

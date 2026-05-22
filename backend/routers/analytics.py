@@ -14,6 +14,11 @@ from backend.services import analytics_service
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 
+@router.get("/summary")
+def summary(db: Session = Depends(get_db)):
+    return analytics_service.get_summary(db)
+
+
 @router.get("/popular-books", response_model=List[PopularBookResponse])
 def popular_books(
     limit: int = Query(default=10, ge=1, le=100),

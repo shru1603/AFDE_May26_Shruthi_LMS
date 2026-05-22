@@ -1,12 +1,14 @@
 """
 etl/pipeline.py
 
-Orchestrates the full ETL pipeline: Extract → Transform → Load.
+Orchestrates the full ETL pipeline: Extract -> Transform -> Load.
+
+CSV data is cleaned and inserted into the operational tables
+(books, borrowers, transactions). Analytics are computed live
+from those tables — no separate analytics tables required.
 
 Run from project root:
     python -m etl.pipeline
-
-The analytics tables are recreated fresh on every run.
 """
 
 import sys
@@ -27,24 +29,11 @@ def run():
     print(f"Started : {start.strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 50)
 
-    # Drop and recreate analytics tables so schema changes are always applied
-    analytics_tables = [
-        models.AnalyticsPopularBooks.__table__,
-        models.AnalyticsCategoryStats.__table__,
-        models.AnalyticsMonthlyTrends.__table__,
-        models.AnalyticsOverdue.__table__,
-    ]
-    for table in analytics_tables:
-        table.drop(bind=engine, checkfirst=True)
+    # Ensure all tables exist
     models.Base.metadata.create_all(bind=engine)
 
-    # Step 1 — Extract
-    extracted = extract.run()
-
-    # Step 2 — Transform
+    extracted  = extract.run()
     transformed = transform.run(extracted)
-
-    # Step 3 — Load
     load.run(transformed)
 
     end = datetime.now()

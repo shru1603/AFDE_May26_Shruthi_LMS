@@ -112,7 +112,10 @@ def delete_borrower(db: Session, borrower_id: int):
 # ── Transaction ───────────────────────────────────────────────────────────────
 
 def get_transactions(db: Session):
-    return db.query(models.Transaction).all()
+    return db.query(models.Transaction).order_by(
+        models.Transaction.borrow_date.desc(),
+        models.Transaction.transaction_id.desc()
+    ).all()
 
 
 def get_transaction(db: Session, transaction_id: int):
